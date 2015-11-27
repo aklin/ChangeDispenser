@@ -8,8 +8,10 @@ import java.util.Random;
 public class Main {
 
 	private static final Random r;
+	private static final int NOMINAL_LIMIT;
 
 	static {
+		NOMINAL_LIMIT = 1000;
 		r = new Random();
 	}
 
@@ -17,19 +19,18 @@ public class Main {
 		final Transaction t;
 		final int price;
 		final int diff;
-		final Coins in;
+		final int payIn;
 		final Coins out;
 
-		price = 100;
-		in = getPurse(price);
-		diff = in.getNominalValue() - price;
+		price = getRandomNominalPrice(NOMINAL_LIMIT);
+		payIn = price + getRandomNominalPrice(NOMINAL_LIMIT);
+		diff = payIn - price;
 
-		t = new Transaction(in, price).setDebug(true);
+		t = new Transaction(payIn, price).setDebug(true);
 		out = t.getChange();
 
 		System.out.println("PRICE: " + price);
-		System.out.println("IN:");
-		System.out.println(in);
+		System.out.println("IN: " + payIn);
 		System.out.println("OUT:");
 		System.out.println(out);
 		System.out.println(diff == out.getNominalValue()
@@ -43,22 +44,8 @@ public class Main {
 	 * Get a random price. The value is guaranteed to be representable in PseudoSterling.
 	 * @return
 	 */
-	private static int getRandomNominalPrice() {
-		return (r.nextInt(1000) + 1) * PseudoSterling.getMinimumFace().getValue();
+	private static int getRandomNominalPrice(final int atLeast) {
+		return (r.nextInt(atLeast) + 1) * PseudoSterling.getMinimumFace().getValue();
 	}
 
-	/**
-	 * Get a purse guaranteed to be at least as valuable as the given value.
-	 * @param atLeast
-	 * @return
-	 */
-	private static Coins getPurse(final int atLeast) {
-		final Coins purse = new Coins();
-		final PseudoSterling[] c = PseudoSterling.values();
-
-		while (purse.getNominalValue() < atLeast)
-			purse.addCoins(c[r.nextInt(c.length)], r.nextInt(5) + 1);
-
-		return purse;
-	}
 }

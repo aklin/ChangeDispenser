@@ -12,21 +12,22 @@ import java.util.Objects;
  */
 public final class Transaction {
 
-	private final Coins coins;
+//	private final Coins coins;
 	private final int price;
+	private final int input;
 	private boolean debug = false;
 
-	public Transaction(final Coins in, final int price) {
+	public Transaction(final int in, final int price) {
 		Objects.requireNonNull(in);
 
 		if (price <= 0)
 			throw new IllegalArgumentException("Price must be greater than zero");
-		if (!isRepresentable(price))
-			throw new IllegalArgumentException("Price is unrepresentable in Pseudo Sterling");
-		if (in.getNominalValue() < price)
+		if (in < price)
 			throw new IllegalArgumentException("Insufficient funds");
+		if (!isRepresentable(in - price))
+			throw new IllegalArgumentException("Change value is unrepresentable");
 
-		coins = in;
+		input = in;
 		this.price = price;
 	}
 
@@ -44,7 +45,7 @@ public final class Transaction {
 		 Greedy algorithm: Select as many faces from max face.
 		 Figure that out using modulo.
 		 */
-		difference = coins.getNominalValue() - price;
+		difference = input - price;
 		changePending = difference;
 
 		for (final PseudoSterling p : available) {
@@ -94,7 +95,7 @@ public final class Transaction {
 	 * @return True of coins cover the price, false otherwise
 	 */
 	public boolean isSufficient() {
-		return coins.getNominalValue() >= price;
+		return input >= price;
 	}
 
 }
