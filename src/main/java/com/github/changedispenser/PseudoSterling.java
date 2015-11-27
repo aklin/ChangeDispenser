@@ -49,12 +49,16 @@ public enum PseudoSterling {
 
 	/**
 	 * Get the face of minimum value in this coinage.
-	 * @return A quarter of a penny
+	 * @return A quarter of a pseudo
 	 */
 	public static PseudoSterling getMinimumFace() {
 		return QUARTER;
 	}
 
+	/**
+	 * Get maximum denomination of currency. Included for the sake of completeness.
+	 * @return A 75P coin (quin-septuagintion?).
+	 */
 	public static PseudoSterling getMaximumFace() {
 		return SEVFIVEP;
 	}
