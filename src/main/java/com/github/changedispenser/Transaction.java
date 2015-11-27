@@ -3,23 +3,25 @@ package com.github.changedispenser;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 
 /**
- * A Transaction represents an attempt to cover a nominal value with a set of coins. In
- * this setting, the attempt is always successful (ie. the constructor demands there are
- * enough funds to cover the fee).
+ * A Transaction represents an attempt to cover a price and get back change. In this
+ * setting the attempt is always successful (ie. the constructor demands there are enough
+ * funds to cover the fee).
  */
 public final class Transaction {
 
-//	private final Coins coins;
 	private final int price;
 	private final int input;
 	private boolean debug = false;
 
+	/**
+	 * Create a new Transaction object. Both parameters are nominal values, and must be
+	 * representable within Pseudo Sterling, or an exception will be thrown.
+	 * @param in Input payment. Must be >= price
+	 * @param price Price to be covered. Must be >0
+	 */
 	public Transaction(final int in, final int price) {
-		Objects.requireNonNull(in);
-
 		if (price <= 0)
 			throw new IllegalArgumentException("Price must be greater than zero");
 		if (in < price)
@@ -34,23 +36,20 @@ public final class Transaction {
 	public Coins getChange() {
 		final Coins change;
 		final List<PseudoSterling> available = Arrays.asList(PseudoSterling.values());
-		final int difference;
-		int changePending;
+		final int difference; //Input value - price
+		int changePending; // Change not yet dispensed
 
-		//Faces are declared incrementally. Turn them around.
+		//Faces are declared incrementally lowest to highest. Turn them around.
 		Collections.reverse(available);
-		change = new Coins();
 
-		/*
-		 Greedy algorithm: Select as many faces from max face.
-		 Figure that out using modulo.
-		 */
 		difference = input - price;
 		changePending = difference;
 
-		for (final PseudoSterling p : available) {
+		change = new Coins();
 
-			int tally = changePending / p.getValue();
+		//Start by examining the highest denomination
+		for (final PseudoSterling p : available) {
+			int tally = changePending / p.getValue(); //non-zero if it fits
 
 			change.addCoins(p, tally);
 
@@ -70,6 +69,7 @@ public final class Transaction {
 	/**
 	 * Enables or disables debug statements.
 	 * @param b
+	 * @return This object
 	 */
 	public Transaction setDebug(final boolean b) {
 		debug = b;
@@ -88,14 +88,6 @@ public final class Transaction {
 	 */
 	public static boolean isRepresentable(final int val) {
 		return val % PseudoSterling.QUARTER.getValue() == 0;
-	}
-
-	/**
-	 * Check whether the coin input is sufficient or not.
-	 * @return True of coins cover the price, false otherwise
-	 */
-	public boolean isSufficient() {
-		return input >= price;
 	}
 
 }
