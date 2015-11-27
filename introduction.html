@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+  <meta name="generator" content="Madoko, version 0.9.18-beta" />
+  <meta name="viewport" content="initial-scale=1.0" />
+  <meta name="author" content="Tony Klinakis" />
+  <title>Change Dispenser Implementation</title>
+  <style type="text/css"  class="link">
+  /*# sourceURL=madoko.css */
+  /* ---------------------------------------------------
+     Various settings to display madoko elements correctly.
+     For example, lines in tables or a table of contents.
+  
+     All rules use specific madoko classes and never just
+     a generic element. This means one can safely include
+     this CSS into any web page without affecting non-madoko
+     content.
+  ----------------------------------------------------*/
+  
+  /* The table of  contents */
+  .madoko .toc>.tocblock .tocblock .tocblock {
+    margin-left: 2.5em;
+  }
+  
+  .madoko .toc>.tocblock .tocblock {
+    margin-left: 1.7em;
+  }
+  
+  .madoko .toc>.tocblock>.tocitem {
+    font-weight: bold;
+  }
+  
+  .madoko .toc {
+    margin-top: 1em;
+  }
+  
+  /* Paragraphs */
+  .madoko p.para-continue {
+    margin-bottom: 0pt;
+  }
+  
+  .madoko .para-block+p {
+    margin-top: 0pt;
+  }
+  
+  .madoko ul.para-block, .madoko ol.para-block {
+    margin-top: 0pt;
+    margin-bottom: 0pt;
+  }
+  
+  .madoko ul.para-end, .madoko ol.para-end {
+    margin-bottom: 1em;
+  }
+  
+  .madoko dl {
+    margin-left: 0em;
+  }
+  
+  .madoko blockquote {
+    font-style: italic;
+  }
+  
+  /* Local page links do not get an underline unless hovering */
+  .madoko a.localref {
+    text-decoration: none;
+  }
+  .madoko a.localref:hover {
+    text-decoration: underline;
+  }
+  
+  /* Footnotes */
+  .madoko .footnotes {
+    font-size: smaller;
+    margin-top: 2em;
+  }
+  
+  .madoko .footnotes hr {
+    width: 50%;
+    text-align: left;
+  }
+  
+  .madoko .footnote { 
+    margin-left: 1em;
+  }
+  .madoko .footnote-before {
+    margin-left: -1em;
+    width: 1em;
+    display: inline-block;
+  }
+  
+  /* Alignment */
+  .madoko .align-center, .madoko .align-center>p {
+    text-align: center !important;
+  }
+  
+  .madoko .align-center pre {
+    text-align: left;
+  }
+  
+  .madoko .align-center>* {
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+  
+  .madoko .align-left, .madoko .align-left>p {
+    text-align: left !important;
+  }
+  
+  .madoko .align-left>* {
+    margin-left: 0pt !important;
+    margin-right: auto !important;
+  }
+  
+  .madoko .align-right, .madoko .align-right>p {
+    text-align: right !important;
+  }
+  
+  .madoko .align-right>* {
+    margin-left: auto !important;
+    margin-right: 0pt !important;
+  }
+  
+  .madoko .align-center>table,
+  .madoko .align-left>table,
+  .madoko .align-right>table {
+    text-align: left !important;
+  }
+  
+  
+  /* Equations, Figure's etc. */
+  .madoko .equation-before {
+    float: right;
+  }
+  
+  
+  /* Bibliography */
+  .madoko .bibitem {
+    font-size: smaller;
+  }
+  
+  .madoko .bib-numeric .bibitem {
+    margin-left: 3em;
+    text-indent: -3em;
+  }
+  
+  .madoko .bibitem-before {
+    display: none;
+  }
+  
+  .madoko .bib-numeric .bibitem-before {
+    display: inline-block;
+    width: 3em;
+    text-align: right;
+  }
+  
+  .madoko .bibliography {
+  }
+  
+  .madoko .bibsearch {
+    font-size: x-small;
+    text-decoration:none;
+    color: black;
+    font-family: "Segoe UI Symbol", Symbola;
+  }
+  
+  /* General */
+  .madoko .block, .madoko .figure, .madoko .bibitem, .madoko .equation, .madoko div.math {
+    margin-top: 1ex;
+    margin-bottom: 1ex;
+  }
+  
+  .madoko .figure {
+    padding: 0.5em;
+    margin-left: 0pt;
+    margin-right: 0pt;
+  }
+  
+  .madoko .hidden {
+    display: none;
+  }
+  
+  .madoko .invisible {
+    visibility: hidden;
+  }
+  
+  .madoko.preview .invisible {
+    visibility: visible;
+    opacity: 0.5;
+  }
+  
+  .madoko code.code, .madoko span.code {
+    white-space: pre-wrap;
+  }
+  
+  .madoko hr, hr.madoko {
+    border: none;
+    border-bottom: black solid 1px;
+    margin-bottom: 0.5ex;
+  }
+  
+  .madoko .framed>*:first-child {
+    margin-top: 0pt;
+  }
+  .madoko .framed>*:last-child {
+    margin-bottom: 0pt;
+  }
+  
+  
+  /* Title, authors */
+  /*
+  .madoko .title {
+    font-size: xx-large;
+    font-weight: bold;
+    margin-bottom: 1ex;
+  }
+  
+  .madoko .subtitle {
+    font-size: x-large;
+    margin-bottom: 1ex;
+    margin-top: -1ex;
+  }
+  
+  .madoko .titleblock>* {
+    margin-left: auto;
+    margin-right: auto;
+    text-align: center;
+  }
+  
+  .madoko .titleblock table {
+    width: 80%;
+  }
+  
+  .madoko .authorblock .author {
+    font-size: large;
+  }
+  
+  .madoko .titlenote {
+    margin-top: -0.5ex;
+    margin-bottom: 1.5ex;
+  }
+  */
+  
+  /* Lists */
+  
+  .madoko ul.list-star {
+    list-style-type: disc;
+  }
+  
+  .madoko ul.list-dash {
+      list-style-type: none !important;
+  }
+  
+  .madoko ul.list-dash > li:before {
+      content: "\2013"; 
+      position: absolute;
+      margin-left: -1em; 
+  }
+  
+  .madoko ul.list-plus {
+    list-style-type: square;
+  }
+  
+  /* Tables */
+  .madoko table.madoko {
+    border-collapse: collapse;
+  }
+  .madoko td, .madoko th {
+    padding: 0ex 0.5ex;
+    margin: 0pt;
+    vertical-align: top;
+  }
+  
+  .madoko .cell-border-left {
+    border-left: 1px solid black;
+  }
+  .madoko .cell-border-right {
+    border-right: 1px solid black;
+  }
+  
+  
+  .madoko thead>tr:first-child>.cell-line,
+  .madoko tbody:first-child>tr:first-child>.cell-line {
+    border-top: 1px solid black;
+    border-bottom: none;
+  }
+  
+  .madoko .cell-line, .madoko .cell-double-line {
+    border-bottom: 1px solid black;
+    border-top: none;
+  }
+  
+  .madoko .cell-double-line {
+    border-top: 1px solid black;
+    padding-top: 1.5px !important;
+  }
+  
+  
+  /* Math Pre */
+  .madoko .input-mathpre .MathJax_Display {
+    text-align: left !important;
+  }
+  
+  .madoko div.input-mathpre {
+    text-align: left;
+    margin-top: 1.5ex;
+    margin-bottom: 1ex;
+  }
+  
+  .madoko .math-rendering {
+    color: gray;
+  }
+  
+  /* Math */
+  .madoko .mathdisplay {
+    text-align: center;
+  }
+  
+  
+  /*---------------------------------------------------------------------------
+    Default style for syntax highlighting
+  ---------------------------------------------------------------------------*/
+  
+  .highlighted                        { color: black; }
+  .highlighted .token.identifier      { }
+  .highlighted .token.operators       { }
+  .highlighted .token.keyword         { color: blue }
+  .highlighted .token.string          { color: maroon } 
+  .highlighted .token.string.escape   { color: gray }
+  .highlighted .token.comment         { color: darkgreen }
+  .highlighted .token.comment.doc     { font-style: normal }
+  .highlighted .token.constant        { color: purple; }
+  .highlighted .token.entity          {  }
+  .highlighted .token.tag             { color: blue }
+  .highlighted .token.info-token      { color: black }
+  .highlighted .token.warn-token      { color: black }
+  .highlighted .token.error-token     { color: darkred }
+  .highlighted .token.debug-token     { color: gray }
+  .highlighted .token.regexp          { color: maroon }
+  .highlighted .token.attribute.name  { color: navy }
+  .highlighted .token.attribute.value { color: maroon }
+  .highlighted .token.constructor     { color: purple }
+  .highlighted .token.namespace       { color: navy }
+  .highlighted .token.header          { color: navy }
+  .highlighted .token.type            { color: teal } 
+  .highlighted .token.type.delimiter  { color: teal; } 
+  .highlighted .token.predefined      { color: navy }
+  .highlighted .token.invalid         { border-bottom: red dotted 1px }
+  .highlighted .token.code            { color: maroon }
+  .highlighted .token.code.keyword    { color: navy }
+  .highlighted .token.typevar         { font-style: italic; }
+  
+  .highlighted .token.delimiter   {  } /* .[curly,square,parenthesis,angle,array,bracket] */
+  .highlighted .token.number      {  }    /* .[hex,octal,binary,float] */
+  .highlighted .token.variable    {  }  /* .[name,value]  */
+  .highlighted .token.meta        { color: navy }      /* .[content] */
+  
+  .highlighted .token.bold            { font-weight: bold; }
+  .highlighted .token.italic          { font-style: italic; }
+  
+  
+  /* Pretty formatting of code */
+  .madoko pre.pretty, .madoko code.pretty { 
+    font-family: Cambria,Times,Georgia,serif;
+    font-size: 100%;
+  }
+  
+  .madoko .pretty table {
+    border-collapse: collapse;
+  }
+  .madoko .pretty td {
+    padding: 0em;
+  }
+  .madoko .pretty td.empty {
+    min-width: 1.5ex;
+  }
+  .madoko .pretty td.expander {
+    width: 100em;
+  }
+  .madoko .pretty .token.identifier         { font-style: italic }
+  .madoko .pretty .token.constructor        { font-style: italic }
+  
+  
+  /* ---------------------------------------------------
+     Styling for full documents
+  ----------------------------------------------------*/
+  body.madoko {
+    font-family: Cambria,"Times New Roman","Liberation Serif","Times",serif;
+    -webkit-text-size-adjust: 100%;       /* so math displays well on mobile devices */
+    text-rendering: optimizeLegibility;
+  }
+  
+  body.madoko {
+    max-width: 88ex; /* about 88 characters */
+    margin: 1em auto;
+    padding: 0em 2em;  
+  }
+  
+  body.preview.madoko {
+    padding: 0em 1em;
+  }
+  
+  .madoko p,
+  .madoko li {
+    text-align: justify;
+  }
+  
+  /* style headings nicer, especially h5 and h6 */
+  .madoko h1, .madoko h2, .madoko h3, .madoko h4 { 
+    margin-top: 1.22em; 
+    margin-bottom: 1ex;
+  }
+  .madoko h1+p, .madoko h2+p, .madoko h3+p, .madoko h4+p, .madoko h5+p  { 
+    margin-top: 1ex;    
+  }
+  .madoko h5, .madoko h6 { 
+    margin-top: 1ex;
+    font-size: 1em;
+  }
+  .madoko h5 { 
+    margin-bottom: 0.5ex;
+  }
+  .madoko h5 + p {
+    margin-top: 0.5ex;
+  }
+  .madoko h6 { 
+    margin-bottom: 0pt;
+  }
+  .madoko h6 + p {
+    margin-top: 0pt;
+  }
+  
+  
+  /* Fix monospace display (see http://code.stephenmorley.org/html-and-css/fixing-browsers-broken-monospace-font-handling/) */
+  .madoko pre, .madoko code, .madoko kbd, .madoko samp, .madoko tt, .madoko .monospace, .madoko .token.indent, .madoko .reveal pre, .madoko .reveal code, .madoko .email {
+    font-family: Consolas,"Andale Mono WT","Andale Mono",Lucida Console,Monaco,monospace,monospace;
+    font-size: 0.85em;
+  }
+  .madoko pre code, .madoko .token.indent {
+    font-size: 0.95em;
+  }
+  
+  .madoko pre code {
+    font-family: inherit !important;
+  }
+  
+  /* Code prettify */
+  .madoko ol.linenums li {
+    background-color: white;
+    list-style-type: decimal;
+  }
+  
+  /* Merging */
+  .madoko .remote {
+    background-color: #F0FFF0;
+  }
+  .madoko .remote + * {
+    margin-top: 0pt;
+  }
+  
+  /* ---------------------------------------------------
+     Print settings
+  ----------------------------------------------------*/
+  
+  @media print {
+    body.madoko {
+      font-size: 10pt;
+    }
+    @page {
+      margin: 1in 1.5in;
+    }
+  }
+  
+  /* ---------------------------------------------------
+     Mobile device settings
+  ----------------------------------------------------*/
+  
+  @media only screen and (max-device-width:1024px) {
+    body.madoko {
+      padding: 0em 1em;
+    }
+  }
+  
+    </style>
+  
+  </head>
+<body class="madoko">
+
+<div class="body madoko" style="line-adjust:0">
+
+<div class="titleblock align-center para-block" style="text-align:center;line-adjust:0">
+<div class="titleheader align-center" style="text-align:center;line-adjust:0">
+<div class="title para-block" style="font-size:xx-large;font-weight:bold;margin-bottom:0.5ex;line-adjust:0">Change Dispenser Implementation</div></div>
+<div class="authors align-center" style="text-align:center;width:80%;line-adjust:0"><table class="authorrow columns block"  style="margin-top:2ex;width:100%;line-adjust:0">
+<tbody><tr><td class="author column"  style="text-align:center;line-adjust:0">
+<div class="authorname" style="font-size:large;line-adjust:0">Tony Klinakis</div>
+<div class="authoraddress" style="line-adjust:0">Candidate: Junior Developer</div>
+<div class="authoremail email" style="line-adjust:0">a.klinakis@yahoo.com</div></td></tr></tbody></table></div></div><h2 id="sec-intro" class="h1"     style="display:block;bookmark:1.&#8194;Introduction;level:1"><span class="heading-before"><span class="heading-label">1</span>.&#8194;</span>Introduction</h2>
+<p class="p noindent">This document is meant to get the reader acquainted with the accompanying code submission, which is 
+part of the technical assessment for the role of Junior Developer.
+</p>
+<p class="p indent"><strong class="strong-star2" >Running the program:</strong>
+This is a Maven project, so Maven is required to build it. A JAR executable is also included in 
+the repository at: <code class="code code1" >target/ChangeDispenser-1.0.jar</code>.
+</p>
+<p class="p indent">The code focuses on the transaction itself rather than its facilitators, which is why there&#39;s 
+no class named <code class="code code1" >VendingMachine</code>. With this approach a user interface, and all condition-checking
+that comes with it, is unnecessary.
+</p><h2 id="sec-class-overview" class="h1"     style="display:block;bookmark:2.&#8194;Class Overview;level:1"><span class="heading-before"><span class="heading-label">2</span>.&#8194;</span>Class Overview</h2>
+<p class="p noindent">The change dispenser is presented with a different problem (price, input) at every execution. 
+The <code class="code code1" >Main</code> class method <code class="code code1" >getRandomNominalPrice()</code>,  returns a random (representable) value.
+Both the item price and user input are generated thus.
+</p><h3 id="sec-pseudosterling-enumeration" class="h2"     style="display:block;bookmark:2.1.&#8194;`PseudoSterling` Enumeration;level:2"><span class="heading-before"><span class="heading-label">2.1</span>.&#8194;</span><code class="code code1" >PseudoSterling</code> Enumeration</h3>
+<p class="p noindent">Pseudo Sterling denominations are represented in this enum. Each entry is associated with
+a nominal value, starting with the <code class="code code1" >QUARTER</code>, valued at <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACYAAAAdCAYAAADGgB7AAAAACXBIWXMAAA7EAAAOxAGVKw4bAAACVUlEQVRYw82Y7ZGbQAyGH7kC4hJIB9ipIL4OSAtcB74auA6cFkgHOB0EdwDpILgD3R/BrDd8LMTMZGc0nvUu4pX0StpFVJWthoiUwB64AiXQAH9U9S4ika3FQAK8AHtVPQCgqg8CnIACaAE1ae2/1N8/JUDt6JiTFkj6Zx0lkVmlwAXIDGQGVJ6C05OB1UD88KynpAKikZdknrL0CcDqMT2iqohIYXE+qOp9gjM5cHb+OqjqbWJ/bd6/AkeLCsAduKpqM8XRxNAnAR6IPIurAI+dl/Cykx3wahYcLVNGh3nzu2uUiMRbZPTOCB6Zy3/PgTMeuiPdCtjemUcGdGr88uaftwLmv6jhPxgdx27Gs/epLLPhc+q+CTBVbVT1oKqfVPUt4Jkv3rwMbE8nESlEpBURtd9KRLKxTOMf2kwdsDc38FWXaLYW21pXaJPByh8I6uTVsSTQiGxiTz6kbykwt2cWAfuLKVADBrS9RxeASh1Q5ZpqHui1PBiY1bc2pA2tBPZAka4lhYyfBq4Bvm5QHRo/g3cBaX6xRn+bO308cSRzLj6v4ZQZUln4sxWnlksI2S8rOFN5L4qWAtuNVWlL9XdVfZ0IcywiycBStDB0e29eD6GP3bSdsfQydBB07g6hev4q3GNlIV8QsnSkLhVzIRzgct/mBnvbgtqm/u3G83q0gpNpfxlxLqedtQQcfV5MiUyUmWN/gR3naWreBfihqt/604Ut6AoJOV2UE1fC01ib8+O7VMqAcLuX6NRqXOo5YyiBHj4FLJV8QS90Pzu0xqvzmDc/ALFsrLEiwxopAAAAAElFTkSuQmCC" alt="$25$" data-path="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACYAAAAdCAYAAADGgB7AAAAACXBIWXMAAA7EAAAOxAGVKw4bAAACVUlEQVRYw82Y7ZGbQAyGH7kC4hJIB9ipIL4OSAtcB74auA6cFkgHOB0EdwDpILgD3R/BrDd8LMTMZGc0nvUu4pX0StpFVJWthoiUwB64AiXQAH9U9S4ika3FQAK8AHtVPQCgqg8CnIACaAE1ae2/1N8/JUDt6JiTFkj6Zx0lkVmlwAXIDGQGVJ6C05OB1UD88KynpAKikZdknrL0CcDqMT2iqohIYXE+qOp9gjM5cHb+OqjqbWJ/bd6/AkeLCsAduKpqM8XRxNAnAR6IPIurAI+dl/Cykx3wahYcLVNGh3nzu2uUiMRbZPTOCB6Zy3/PgTMeuiPdCtjemUcGdGr88uaftwLmv6jhPxgdx27Gs/epLLPhc+q+CTBVbVT1oKqfVPUt4Jkv3rwMbE8nESlEpBURtd9KRLKxTOMf2kwdsDc38FWXaLYW21pXaJPByh8I6uTVsSTQiGxiTz6kbykwt2cWAfuLKVADBrS9RxeASh1Q5ZpqHui1PBiY1bc2pA2tBPZAka4lhYyfBq4Bvm5QHRo/g3cBaX6xRn+bO308cSRzLj6v4ZQZUln4sxWnlksI2S8rOFN5L4qWAtuNVWlL9XdVfZ0IcywiycBStDB0e29eD6GP3bSdsfQydBB07g6hev4q3GNlIV8QsnSkLhVzIRzgct/mBnvbgtqm/u3G83q0gpNpfxlxLqedtQQcfV5MiUyUmWN/gR3naWreBfihqt/604Ut6AoJOV2UE1fC01ib8+O7VMqAcLuX6NRqXOo5YyiBHj4FLJV8QS90Pzu0xqvzmDc/ALFsrLEiwxopAAAAAElFTkSuQmCC" class="math-inline math" style="vertical-align:-0.000em;height:0.754em">. This number can be changed
+with any positive integer without affecting the algorithm, provided that the relation
+of all denominations remains proportional (ie. a <em class="em-low1" >Pseudo Sterling</em> is always twice a 
+<em class="em-low1" >Half-Pseudo Sterling</em>).
+</p><h3 id="sec-transaction-class" class="h2"     style="display:block;bookmark:2.2.&#8194;`Transaction` class;level:2"><span class="heading-before"><span class="heading-label">2.2</span>.&#8194;</span><code class="code code1" >Transaction</code> class</h3>
+<p class="p noindent">The <code class="code code1" >Transaction</code> class accepts a nominal price and input at the constructor. The change 
+is calculated by the <code class="code code1" >getChange()</code> method, which returns a new <code class="code code1" >Coins</code> object 
+(see&nbsp;<a href="#sec-coins" title="2.3.&#8194;Coins class" class="localref" style="target-element:h2"><span class="heading-label">2.3</span></a>) that solves the objective of this exercise. 
+</p>
+<p class="p indent">For the sake of simplicity the following preconditions must be met at the constructor, 
+otherwise an <code class="code code1" >IllegalArgumentException</code> will be thrown:
+</p>
+<ul class="ul list-star compact" >
+<li class="li ul-li list-star-li compact-li" >Price must be <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAD0AAAAfCAYAAABUBsXUAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAChklEQVRYw91Y23GjQBDspi4ArBBQBvKFgDKQfRlIGeAQruQM0IWAM0AhGGeAMziJDPp+Zqu20Auh1YPbKkpbaAa2Z9jenqEkDHmQnAFYAEgAjABsAKwB5JK+9vlEAwabkKwB/AFQAniW9ARgauArkvleZ0mDuwBMAAjAFkB8wCYzm7ptM1TQtQGanbArzK4YNGgAS5fBDrap2QpAOmTQDkTe0X5r9qW7Fw2Qqd2oOrp92m9KMgaAiGRMcj4Q3L+8+XdHn8abp+7IegWQk9ySXLpoPOhIvfmmo48fnCkARJJWAF7szwzAlmROMnmwTzsGEB/I4LHx15v/3DmnLZKlRxYFgMmDEFjirUuHzuc9fnPPp94hMklrSVMAYwAfAGambCqS6Z2THWLbjQ7KUEnfkl4APAF4NwVUkqzvSHqjUIE7emRJaiS9Gfg3e7EjvWwgmd70KjgM/LsJ+oU9aElSA2D8HUI8W5xIWkkaG+N/PTLj79sWkpreikzSh6RnO/vWxpI1yZLk5AqLb0I96GIZuofxU4/xZwFBb0IFLpj2bjH+yhi/MMZPr5DpUd/ABS84JDXG9Cu7lRj5hc50V/IcXy3TXgsnt3JubtJ2YV9AiGA2PTIdtyuuKBDYCcnCOhpzY/WppLFp+1Dj05t3PSmSnXL0Qj18U63e0tFZR5/K80l6d05Mk9d+F8M98MpFR+y9szyz01L1ahdZpLdeJ3LZtdoJCDx3QDom5/wemUV32QKb3bHEjL21zE/Ylmd1Q40Acr8WPdVyvSFwv8s5ubjv7USFv3f8T+PBGv6OVzIHzJJVeGvf2X6D6Jp04Jmqtf2KY4lykaluzcT3vH5YhhPrkPw25fNfj38HW5xxxXvSfQAAAABJRU5ErkJggg==" alt="$&gt; 0$" data-path="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAD0AAAAfCAYAAABUBsXUAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAChklEQVRYw91Y23GjQBDspi4ArBBQBvKFgDKQfRlIGeAQruQM0IWAM0AhGGeAMziJDPp+Zqu20Auh1YPbKkpbaAa2Z9jenqEkDHmQnAFYAEgAjABsAKwB5JK+9vlEAwabkKwB/AFQAniW9ARgauArkvleZ0mDuwBMAAjAFkB8wCYzm7ptM1TQtQGanbArzK4YNGgAS5fBDrap2QpAOmTQDkTe0X5r9qW7Fw2Qqd2oOrp92m9KMgaAiGRMcj4Q3L+8+XdHn8abp+7IegWQk9ySXLpoPOhIvfmmo48fnCkARJJWAF7szwzAlmROMnmwTzsGEB/I4LHx15v/3DmnLZKlRxYFgMmDEFjirUuHzuc9fnPPp94hMklrSVMAYwAfAGambCqS6Z2THWLbjQ7KUEnfkl4APAF4NwVUkqzvSHqjUIE7emRJaiS9Gfg3e7EjvWwgmd70KjgM/LsJ+oU9aElSA2D8HUI8W5xIWkkaG+N/PTLj79sWkpreikzSh6RnO/vWxpI1yZLk5AqLb0I96GIZuofxU4/xZwFBb0IFLpj2bjH+yhi/MMZPr5DpUd/ABS84JDXG9Cu7lRj5hc50V/IcXy3TXgsnt3JubtJ2YV9AiGA2PTIdtyuuKBDYCcnCOhpzY/WppLFp+1Dj05t3PSmSnXL0Qj18U63e0tFZR5/K80l6d05Mk9d+F8M98MpFR+y9szyz01L1ahdZpLdeJ3LZtdoJCDx3QDom5/wemUV32QKb3bHEjL21zE/Ylmd1Q40Acr8WPdVyvSFwv8s5ubjv7USFv3f8T+PBGv6OVzIHzJJVeGvf2X6D6Jp04Jmqtf2KY4lykaluzcT3vH5YhhPrkPw25fNfj38HW5xxxXvSfQAAAABJRU5ErkJggg==" class="math-inline math" style="vertical-align:-0.046em;height:0.807em">, and
+</li>
+<li class="li ul-li list-star-li compact-li" >Input value must be equal to or greater than the price
+</li></ul>
+<h4 id="sec-getchange" class="h3"     style="display:block;bookmark:2.2.1.&#8194;`getChange()`;level:3"><span class="heading-before"><span class="heading-label">2.2.1</span>.&#8194;</span><code class="code code1" >getChange()</code></h4>
+<p class="p noindent">Given a nominal value, the algorithm will try to dispense as many coins, of the maximum
+possible face, as possible. When no more coins can be dispensed, the algorithm will move
+on to the next denomination. The pseudocode looks like this:
+</p>
+<pre class="para-block pre-fenced pre-fenced3 language-ruby lang-ruby ruby highlighted"  ><code><span class='token white ruby'>  </span><span class='token identifier ruby'>changePending</span><span class='token source ruby'>,</span><span class='token white ruby'> </span><span class='token identifier ruby'>difference</span><span class='token white ruby'> </span><span class='token delimiter parenthesis ruby bracket-open'>(</span><span class='token identifier ruby'>int</span><span class='token delimiter parenthesis ruby bracket-close'>)</span><span class='token white ruby'> </span>=<span class='token white ruby'> </span><span class='token constructor identifier ruby'>CoinsIn</span>.<span class='token identifier ruby'>value</span><span class='token white ruby'> </span><span class='token operator ruby'>-</span><span class='token white ruby'> </span><span class='token constructor identifier ruby'>Price</span><br><span class='token white ruby'>  </span><span class='token constructor identifier ruby'>Faces</span><span class='token white ruby'> </span><span class='token delimiter parenthesis ruby bracket-open'>(</span><span class='token constructor identifier ruby'>Coins</span><span class='token delimiter parenthesis ruby bracket-close'>)</span><span class='token white ruby'> </span>=<span class='token white ruby'> </span><span class='token constructor identifier ruby'>AllFaces</span>.<span class='token identifier ruby'>sortByGreatest</span><span class='token white ruby'> </span><span class='token comment ruby'>#sort other way around to get a bunch of quarters</span><br><span class='token white ruby'>  </span><span class='token constructor identifier ruby'>Change</span><span class='token white ruby'> </span><span class='token delimiter parenthesis ruby bracket-open'>(</span><span class='token constructor identifier ruby'>Coins</span><span class='token delimiter parenthesis ruby bracket-close'>)</span><span class='token white ruby'> </span>=<span class='token white ruby'> </span><span class='token identifier ruby'>empty</span><br><span class='token white ruby'>  </span><br><span class='token white ruby'>  </span><span class='token keyword for ruby bracket-open'>for</span><span class='token white ruby'> </span><span class='token identifier ruby'>each</span><span class='token white ruby'> </span><span class='token constructor identifier ruby'>F</span><span class='token white ruby'> </span><span class='token keyword ruby'>in</span><span class='token white ruby'> </span><span class='token constructor identifier ruby'>Faces</span><br><span class='token white ruby'>    </span><span class='token identifier ruby'>tally</span><span class='token white ruby'> </span><span class='token delimiter parenthesis ruby bracket-open'>(</span><span class='token identifier ruby'>int</span><span class='token delimiter parenthesis ruby bracket-close'>)</span><span class='token white ruby'> </span>=<span class='token white ruby'> </span><span class='token identifier ruby'>changePending</span><span class='token white ruby'> </span><span class='token operator ruby'>/</span><span class='token white ruby'> </span><span class='token constructor identifier ruby'>F</span>.<span class='token identifier ruby'>value</span><span class='token delimiter ruby'>;</span><br><span class='token white ruby'>    </span><span class='token keyword if ruby bracket-open'>if</span><span class='token white ruby'> </span><span class='token identifier ruby'>tally</span><span class='token white ruby'> </span><span class='token operator ruby'>&gt;</span><span class='token white ruby'> </span><span class='token number ruby'>0</span><br><span class='token white ruby'>      </span><span class='token constructor identifier ruby'>Change</span>.<span class='token identifier ruby'>add</span><span class='token delimiter parenthesis ruby bracket-open'>(</span><span class='token constructor identifier ruby'>F</span><span class='token white ruby'> </span><span class='token operator ruby'>*</span><span class='token white ruby'> </span><span class='token identifier ruby'>tally</span><span class='token delimiter parenthesis ruby bracket-close'>)</span><br><span class='token white ruby'>      </span><span class='token comment ruby'># Update the pending value based on Change update</span><br><span class='token white ruby'>      </span><span class='token identifier ruby'>changePending</span><span class='token white ruby'> </span>=<span class='token white ruby'> </span><span class='token identifier ruby'>difference</span><span class='token white ruby'> </span><span class='token operator ruby'>-</span><span class='token white ruby'> </span><span class='token constructor identifier ruby'>Change</span>.<span class='token identifier ruby'>value</span><br><span class='token white ruby'>  </span><br><span class='token white ruby'>  </span><span class='token identifier ruby'>assert</span><span class='token white ruby'> </span><span class='token constructor identifier ruby'>Change</span>.<span class='token identifier ruby'>value</span><span class='token white ruby'> </span><span class='token operator ruby'>==</span><span class='token white ruby'> </span><span class='token identifier ruby'>difference</span></code></pre>
+<p class="p noindent para-continued">The algorithm will run in <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFQAAAArCAYAAADmH6/VAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAEjElEQVRo3tVb/3WbMBD+4HUA4kxQsgFJJyjdwGknKN7AfRmBEZwN8sgGuBM0eAOcCRp7g+sfPaUXRYAkcC30np8TG9Ddd5/ul+SIiDCXEUVRAuCGiLZnmDsH8EREx77r4hmBmQJ4PqMILwCeoyjKeq8iouBfAFIABwDrM8uxBEAAsq5rotCXPC/zBsCOiG4DkKcEUAD4aFr+XoDy8lsByAAsmEEJgCOAPYAHAI9EtJ9AgRrATZcCZwK14dV9PWrJA1gDaJn2NVsqYzBTADmAkpcnAagApCOWWMHPWQbmgjKWq3z3nYPvsAaJAa74egKQewid8JxNoH69Zt1Sa0BZqYZvPLgyRUzqDCoz3csY/wnQXBHMClCmtWJlCyDxZBkJgyQOUZ0AtIFnH60e9YfQdwKi41kb8ayNIzvXgQO61Fn6Lspz4tqIj67GRGuuMGoRBCOLew7M7otQInuPrCT1ig3p0E/x0WqC1OfJAPCQARIA+9DB5LFjuQtT6VmxMmCF7sfOZgDly8AtK37fYh5DyXn7BlBGODMoNvVIBr5XMjQzAfQXv+evib3I+VTwqCeuw0m8KsusIPNIthvWozUFNJZlw9e1Ks8dUzjoMutRVb2KE+Rr1FVdGKImeRYBuZZZbLRso5XgaXn2ZoSOioyF/oF6JRMCurY1lri29UjNSpNhmJV1F2CijHReFeIZr0aJOU2Sfm07cXTVg1Bf1nDF767zFwyqGqn4W3WqumKClCcf0SsFgDQ2BJ96Yqeda1G/L3qnmoA2eeCSAZPAfJJpGxH96HnEwmBQ13GUgKamvGqipHepffQ4cMvCg6HfuF1oyhRsspVMY/MYhi4+GAB9mpCdd9r/G8uU6sVhjgeZs3JDOhXua6gw+WTpjmwYineATuU/2TdL6+8sNtecGUpEjz0uxsZ9LS3dUd/4rQgRa8IfT8jO7w5LZ6oguLXYeUgt3ZHViDWaJxOyU/rPeyJy8c1j5MgF43a27DT4YZdxqQgZT+wzZU9ALvWVoy9ajNjQSx16Aase1+FTTr/Eup8Z3HceVmojlDoC+Oxw+34kQ792GLVrFSk573XDDHXFunx/zJbZa2mIL5gFJ9kKzGvHILcfw1AX/6mlU5XB/2ceDN2bSjWv0hP/diiJ87kxzziMrKkPDtsXbcdzUo+tkLJrq6I69TaHRV2djOhqVQ4dotJgVFf9Xzci+4CpLDtJrWBlPkEzRc2/HLFCCod5CkPXKvUlwRBIB+4A6YcZ1hqQywm7U81Qm6/jvsqF3YI8paa3ryHboW3kXDRjDwLghoVfT9nmM7Twag/FnA6UcR9YNZprn/adMGQZ5GExrl5aAEciugh9/yOKopZX7jUR7YI7H8rNjC0A11zwXMZP8XdDc/dmky6wobpSt4ETdKV30YI9HyqWUrCHHfhABqRrimdg/btAwSw483nTRQv6BHOIh201du71Q7eh/2hhxSwoAwOzNLFTRVXM5IRbHtjpZWM1NpdfgZSuJeGJ5FCl6Wa2vwLR+qw5EV2dUYaG/WZnOjcbQFmhNYDLgX32s879B2Df92NMaWhOAAAAAElFTkSuQmCC" alt="$O(n)$" data-path="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFQAAAArCAYAAADmH6/VAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAEjElEQVRo3tVb/3WbMBD+4HUA4kxQsgFJJyjdwGknKN7AfRmBEZwN8sgGuBM0eAOcCRp7g+sfPaUXRYAkcC30np8TG9Ddd5/ul+SIiDCXEUVRAuCGiLZnmDsH8EREx77r4hmBmQJ4PqMILwCeoyjKeq8iouBfAFIABwDrM8uxBEAAsq5rotCXPC/zBsCOiG4DkKcEUAD4aFr+XoDy8lsByAAsmEEJgCOAPYAHAI9EtJ9AgRrATZcCZwK14dV9PWrJA1gDaJn2NVsqYzBTADmAkpcnAagApCOWWMHPWQbmgjKWq3z3nYPvsAaJAa74egKQewid8JxNoH69Zt1Sa0BZqYZvPLgyRUzqDCoz3csY/wnQXBHMClCmtWJlCyDxZBkJgyQOUZ0AtIFnH60e9YfQdwKi41kb8ayNIzvXgQO61Fn6Lspz4tqIj67GRGuuMGoRBCOLew7M7otQInuPrCT1ig3p0E/x0WqC1OfJAPCQARIA+9DB5LFjuQtT6VmxMmCF7sfOZgDly8AtK37fYh5DyXn7BlBGODMoNvVIBr5XMjQzAfQXv+evib3I+VTwqCeuw0m8KsusIPNIthvWozUFNJZlw9e1Ks8dUzjoMutRVb2KE+Rr1FVdGKImeRYBuZZZbLRso5XgaXn2ZoSOioyF/oF6JRMCurY1lri29UjNSpNhmJV1F2CijHReFeIZr0aJOU2Sfm07cXTVg1Bf1nDF767zFwyqGqn4W3WqumKClCcf0SsFgDQ2BJ96Yqeda1G/L3qnmoA2eeCSAZPAfJJpGxH96HnEwmBQ13GUgKamvGqipHepffQ4cMvCg6HfuF1oyhRsspVMY/MYhi4+GAB9mpCdd9r/G8uU6sVhjgeZs3JDOhXua6gw+WTpjmwYineATuU/2TdL6+8sNtecGUpEjz0uxsZ9LS3dUd/4rQgRa8IfT8jO7w5LZ6oguLXYeUgt3ZHViDWaJxOyU/rPeyJy8c1j5MgF43a27DT4YZdxqQgZT+wzZU9ALvWVoy9ajNjQSx16Aase1+FTTr/Eup8Z3HceVmojlDoC+Oxw+34kQ792GLVrFSk573XDDHXFunx/zJbZa2mIL5gFJ9kKzGvHILcfw1AX/6mlU5XB/2ceDN2bSjWv0hP/diiJ87kxzziMrKkPDtsXbcdzUo+tkLJrq6I69TaHRV2djOhqVQ4dotJgVFf9Xzci+4CpLDtJrWBlPkEzRc2/HLFCCod5CkPXKvUlwRBIB+4A6YcZ1hqQywm7U81Qm6/jvsqF3YI8paa3ryHboW3kXDRjDwLghoVfT9nmM7Twag/FnA6UcR9YNZprn/adMGQZ5GExrl5aAEciugh9/yOKopZX7jUR7YI7H8rNjC0A11zwXMZP8XdDc/dmky6wobpSt4ETdKV30YI9HyqWUrCHHfhABqRrimdg/btAwSw483nTRQv6BHOIh201du71Q7eh/2hhxSwoAwOzNLFTRVXM5IRbHtjpZWM1NpdfgZSuJeGJ5FCl6Wa2vwLR+qw5EV2dUYaG/WZnOjcbQFmhNYDLgX32s879B2Df92NMaWhOAAAAAElFTkSuQmCC" class="math-inline math" style="vertical-align:-0.280em;height:1.119em"> where <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABcAAAASCAYAAACw50UTAAAACXBIWXMAAA7EAAAOxAGVKw4bAAABWElEQVQ4y6WV3VHEMAyEP2WuAA8lhA4CdBA6yEAHRwfHUEJKCB0w0EFSAqGD0AETOhAv8qD4nPsBPcnWai1tZAdVRVUBKmAEZmACdjHmMCXQGW4y7Ag0KVZViUnBgLWtO0CBzhF3Rti4vWDkC2xK3gGtS2osQa3aPpfsOo7YKkeuQOkSdi5h9gdnyIPDLqQsRKQBPlT1k1+7cf67qj6ybhfOv/SBArgHXpKEyvkPHDaPHX1gY8RD3BCRYDoDDElHOfNdLrEZDZs1DVc0nyI+jRWZSm6dPxwqWURK1+XbHuCcSjJYP1VNds5Xxqr/jySqyiZp5M75r0ckqZwkz0ksANebv+qdjGhayBPwlbY5x1t5hiRTJjYDZZF8+XDilIS1KRGRbbwfXpba+f0hclX9FpG4nJJDW+BqMYqmW5yUcIIs8VlubV3vPckOvDWtjt5Kl9O6n0afPrk/99r9X4U5B1AAAAAASUVORK5CYII=" alt="$n$" data-path="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABcAAAASCAYAAACw50UTAAAACXBIWXMAAA7EAAAOxAGVKw4bAAABWElEQVQ4y6WV3VHEMAyEP2WuAA8lhA4CdBA6yEAHRwfHUEJKCB0w0EFSAqGD0AETOhAv8qD4nPsBPcnWai1tZAdVRVUBKmAEZmACdjHmMCXQGW4y7Ag0KVZViUnBgLWtO0CBzhF3Rti4vWDkC2xK3gGtS2osQa3aPpfsOo7YKkeuQOkSdi5h9gdnyIPDLqQsRKQBPlT1k1+7cf67qj6ybhfOv/SBArgHXpKEyvkPHDaPHX1gY8RD3BCRYDoDDElHOfNdLrEZDZs1DVc0nyI+jRWZSm6dPxwqWURK1+XbHuCcSjJYP1VNds5Xxqr/jySqyiZp5M75r0ckqZwkz0ksANebv+qdjGhayBPwlbY5x1t5hiRTJjYDZZF8+XDilIS1KRGRbbwfXpba+f0hclX9FpG4nJJDW+BqMYqmW5yUcIIs8VlubV3vPckOvDWtjt5Kl9O6n0afPrk/99r9X4U5B1AAAAAASUVORK5CYII=" class="math-inline math" style="vertical-align:-0.000em;height:0.468em"> is the number of denominations (faces) in Pseudo Sterling.
+</p><h3 id="sec-coins" class="h2"     style="display:block;bookmark:2.3.&#8194;`Coins` class;level:2"><span class="heading-before"><span class="heading-label">2.3</span>.&#8194;</span><code class="code code1" >Coins</code> class</h3>
+<p class="p noindent">The <code class="code code1" >Coins</code> class represents (as the name might suggest) an aggregation of coins.
+Internally the state is stored in a <code class="code code1" >EnumMap</code>, which maps each face to the number 
+of times it is present. Since it was unnecessary for the exercise, no method
+exists to remove coins from the set.
+</p><h2 id="sec-final-remarks" class="h1"     style="display:block;bookmark:3.&#8194;Final Remarks;level:1"><span class="heading-before"><span class="heading-label">3</span>.&#8194;</span>Final Remarks</h2>
+<p class="p noindent">Simplicity and straightforwardness were chosen above all during the design, coupled
+with what the author believes to be a correct (or, at least, plausible) OO design.
+I believe the entire submission is a good sample of the quality of my work, and I&#39;m
+happy to be represented by it.
+</p>
+<p class="p indent">Thank you for your time.
+</p></div><span data-line=""></span>
+</body>
+
+</html>
