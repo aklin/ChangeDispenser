@@ -2,12 +2,11 @@ package com.github.changedispenser;
 
 import java.util.Collections;
 import java.util.EnumMap;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
 
 /**
- *
+ * Coin aggregator. Encapsulates a Map structure that contains the denomination tally.
  */
 public final class Coins {
 
@@ -26,6 +25,10 @@ public final class Coins {
 		calculateNominalValue();
 	}
 
+	/**
+	 * Get the nominal value of this aggregation.
+	 * @return The nominal value of all coins contained within
+	 */
 	public int getNominalValue() {
 		return nominal;
 	}
@@ -33,7 +36,7 @@ public final class Coins {
 	/**
 	 * Adds a single coin to the collection.
 	 * @param face
-	 * @return
+	 * @return This object
 	 */
 	public Coins addCoin(final PseudoSterling face) {
 		return addCoins(face, 1);
@@ -41,8 +44,8 @@ public final class Coins {
 
 	/**
 	 * Add a number of same-faced coins. Also updates the nominal value of this instance.
-	 * @param face
-	 * @param count How many coins of same face to add
+	 * @param face Denomination to be added
+	 * @param count Non-negative denomination count.
 	 * @return This object
 	 */
 	public Coins addCoins(final PseudoSterling face, final int count) {
@@ -70,8 +73,8 @@ public final class Coins {
 	private void calculateNominalValue() {
 		nominal = 0;
 
-		coins.forEach((k, v) -> {
-			nominal += k.getValue() * v;
+		coins.forEach((face, nValue) -> {
+			nominal += face.getValue() * nValue;
 		});
 
 	}
@@ -80,43 +83,16 @@ public final class Coins {
 	public String toString() {
 		final StringBuilder b = new StringBuilder();
 
-		for (PseudoSterling p : coins.keySet()) {
+		for (final PseudoSterling p : coins.keySet())
 			b.append("\t")
 					.append(coins.get(p))
 					.append(" x ")
 					.append(p)
 					.append("\n");
-		}
 
 		b.append("Total: ").append(getNominalValue());
 
 		return b.toString();
-	}
-
-	@Override
-	public int hashCode() {
-		int hash = 3;
-		hash = 97 * hash + Objects.hashCode(this.coins);
-		hash = 97 * hash + this.nominal;
-		return hash;
-	}
-
-	@Override
-	public boolean equals(Object obj) {
-		final Coins other;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-
-		other = (Coins) obj;
-		if (!Objects.equals(this.coins, other.coins))
-			return false;
-
-		if (this.nominal != other.nominal)
-			return false;
-
-		return true;
 	}
 
 }
